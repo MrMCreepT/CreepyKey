@@ -254,12 +254,10 @@ async function processBatchFile(fileHandle, outDirHandle) {
 
         const newFilename = `${result.camelotCode} - ${file.name}`;
 
-        // In-place binary ID3 update (keeps all other tags like Title, Artist, Artwork, Ratings, Cues)
-        const taggedBuffer = updateID3Tags(arrayBuffer, result.camelotCode, result.bpm);
-
+        // Save a copy of the original file under the new renamed filename (preserving 100% of original tags, cue points, and artwork)
         const newFileHandle = await outDirHandle.getFileHandle(newFilename, { create: true });
         const writable = await newFileHandle.createWritable();
-        await writable.write(taggedBuffer);
+        await writable.write(arrayBuffer);
         await writable.close();
 
         fileRegistry[rowId] = file;
@@ -378,150 +376,7 @@ function parseGenreFromBuffer(arrayBuffer) {
 }
 
 // Custom native ID3v2 frame-preserving editor
-function updateID3Tags(arrayBuffer, camelotCode, bpm) {
-    const uint8 = new Uint8Array(arrayBuffer);
-    
-    // Fall back to clean write if file has no ID3v2 tag
-    if (uint8[0] !== 0x49 || uint8[1] !== 0x44 || uint8[2] !== 0x33) {
-        return fallbackID3Write(arrayBuffer, camelotCode, bpm);
-    }
-    
-    const majorVersion = uint8[3];
-    const revision = uint8[4];
-    const flags = uint8[5];
-    const tagSize = ((uint8[6] & 0x7F) << 21) | 
-                    ((uint8[7] & 0x7F) << 14) | 
-                    ((uint8[8] & 0x7F) << 7) | 
-                    (uint8[9] & 0x7F);
-                    
-    let offset = 10;
-    if (flags & 0x40) {
-        const extHeaderSize = ((uint8[offset] & 0x7F) << 21) | 
-                              ((uint8[offset+1] & 0x7F) << 14) | 
-                              ((uint8[offset+2] & 0x7F) << 7) | 
-                              (uint8[offset+3] & 0x7F);
-        offset += 4 + extHeaderSize;
-    }
-    
-    const preservedFrames = [];
-    const endOfTags = 10 + tagSize;
-    
-    while (offset + 10 <= endOfTags) {
-        const frameId = String.fromCharCode(uint8[offset], uint8[offset+1], uint8[offset+2], uint8[offset+3]);
-        if (uint8[offset] === 0) break;
-        
-        let frameSize = 0;
-        if (majorVersion === 3) {
-            frameSize = (uint8[offset+4] << 24) | (uint8[offset+5] << 16) | (uint8[offset+6] << 8) | uint8[offset+7];
-        } else if (majorVersion === 4) {
-            frameSize = ((uint8[offset+4] & 0x7F) << 21) | ((uint8[offset+5] & 0x7F) << 14) | ((uint8[offset+6] & 0x7F) << 7) | (uint8[offset+7] & 0x7F);
-        } else {
-            return fallbackID3Write(arrayBuffer, camelotCode, bpm);
-        }
-        
-        const totalFrameSize = 10 + frameSize;
-        if (offset + totalFrameSize > endOfTags) break;
-        
-        // Filter out existing TKEY and TBPM
-        if (frameId !== 'TKEY' && frameId !== 'TBPM') {
-            preservedFrames.push(uint8.subarray(offset, offset + totalFrameSize));
-        }
-        offset += totalFrameSize;
-    }
-    
-    // Create new TKEY and TBPM text frames
-    const newFrames = [];
-    function createTextFrame(id, text) {
-        const textBytes = new TextEncoder().encode(text);
-        const frameSize = 1 + textBytes.length; // 1 byte for encoding selector
-        const frameData = new Uint8Array(10 + frameSize);
-        
-        frameData[0] = id.charCodeAt(0);
-        frameData[1] = id.charCodeAt(1);
-        frameData[2] = id.charCodeAt(2);
-        frameData[3] = id.charCodeAt(3);
-        
-        frameData[4] = (frameSize >> 24) & 0xFF;
-        frameData[5] = (frameSize >> 16) & 0xFF;
-        frameData[6] = (frameSize >> 8) & 0xFF;
-        frameData[7] = frameSize & 0xFF;
-        
-        frameData[8] = 0; // flags
-        frameData[9] = 0;
-        frameData[10] = 0; // Latin-1 encoding selector
-        frameData.set(textBytes, 11);
-        
-        return frameData;
-    }
-    
-    if (camelotCode && camelotCode !== 'Unknown') {
-        newFrames.push(createTextFrame('TKEY', camelotCode));
-    }
-    if (bpm && bpm !== 'Unknown') {
-        newFrames.push(createTextFrame('TBPM', bpm.toString()));
-    }
-    
-    let framesSizeSum = 0;
-    preservedFrames.forEach(f => framesSizeSum += f.length);
-    newFrames.forEach(f => framesSizeSum += f.length);
-    
-    // We add 1024 bytes of padding to support future updates in other software
-    const paddingSize = 1024;
-    const newTagSize = framesSizeSum + paddingSize;
-    
-    const audioDataOffset = 10 + tagSize;
-    const audioDataLength = uint8.length - audioDataOffset;
-    
-    const newFileBuffer = new Uint8Array(10 + newTagSize + audioDataLength);
-    
-    // Header
-    newFileBuffer[0] = 0x49; // I
-    newFileBuffer[1] = 0x44; // D
-    newFileBuffer[2] = 0x33; // 3
-    newFileBuffer[3] = majorVersion;
-    newFileBuffer[4] = revision;
-    newFileBuffer[5] = flags & ~0x40; // Clear extended header flag if present
-    
-    // Tag Size as synchsafe 32-bit int
-    newFileBuffer[6] = (newTagSize >> 21) & 0x7F;
-    newFileBuffer[7] = (newTagSize >> 14) & 0x7F;
-    newFileBuffer[8] = (newTagSize >> 7) & 0x7F;
-    newFileBuffer[9] = newTagSize & 0x7F;
-    
-    let writeOffset = 10;
-    
-    // Write preserved frames
-    preservedFrames.forEach(f => {
-        newFileBuffer.set(f, writeOffset);
-        writeOffset += f.length;
-    });
-    
-    // Write new TKEY and TBPM
-    newFrames.forEach(f => {
-        newFileBuffer.set(f, writeOffset);
-        writeOffset += f.length;
-    });
-    
-    // Write padding (0x00)
-    for (let i = 0; i < paddingSize; i++) {
-        newFileBuffer[writeOffset + i] = 0;
-    }
-    writeOffset += paddingSize;
-    
-    // Copy the remaining audio data
-    newFileBuffer.set(uint8.subarray(audioDataOffset), writeOffset);
-    
-    return newFileBuffer.buffer;
-}
 
-function fallbackID3Write(arrayBuffer, camelotCode, bpm) {
-    // Falls back to browser-id3-writer if no tags exist
-    const writer = new browserID3Writer(arrayBuffer);
-    writer.setFrame('TKEY', camelotCode); 
-    writer.setFrame('TBPM', bpm.toString()); 
-    writer.addTag();
-    return writer.arrayBuffer;
-}
 
 // Exports
 exportCsvBtn.addEventListener('click', () => {
