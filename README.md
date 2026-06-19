@@ -35,6 +35,7 @@ Because it runs 100% client-side, your files never leave your computer—guarant
 
 *   **Core**: HTML5, Vanilla CSS3 (Custom Variables), JavaScript (ES6+ Modules)
 *   **Web APIs**: Web Audio API, Web Workers, Service Workers, File System Access API
+*   **Standards-Compliant ID3 Encoding**: Dynamically encodes text frames (using ISO-8859-1 for ASCII or UTF-16 with BOM for international characters in ID3v2.3; UTF-8 in ID3v2.4) to guarantee native metadata rendering across Windows Explorer, macOS Finder, Rekordbox, Serato, and CDJs.
 *   **Client-Side Libraries**:
     *   [wavesurfer.js](https://github.com/katspaugh/wavesurfer.js) (Interactive Waveforms)
     *   [browser-id3-writer](https://github.com/egoroof/browser-id3-writer) (Metadata tag writing fallback)

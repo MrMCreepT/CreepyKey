@@ -600,9 +600,44 @@ function decodeTextFrame(uint8, offset, frameSize) {
     return text.replace(/\0+$/, '').trim();
 }
 
+function encodeText(str, majorVersion) {
+    let isAscii = true;
+    for (let i = 0; i < str.length; i++) {
+        if (str.charCodeAt(i) > 127) {
+            isAscii = false;
+            break;
+        }
+    }
+    
+    if (majorVersion === 4) {
+        return {
+            encoding: 3, // UTF-8
+            bytes: new TextEncoder().encode(str)
+        };
+    } else {
+        if (isAscii) {
+            const bytes = new Uint8Array(str.length);
+            for (let i = 0; i < str.length; i++) {
+                bytes[i] = str.charCodeAt(i);
+            }
+            return { encoding: 0, bytes }; // Latin-1
+        } else {
+            const bytes = new Uint8Array(2 + str.length * 2);
+            bytes[0] = 0xFF; // BOM LE
+            bytes[1] = 0xFE;
+            for (let i = 0; i < str.length; i++) {
+                const code = str.charCodeAt(i);
+                bytes[2 + i * 2] = code & 0xFF;
+                bytes[2 + i * 2 + 1] = (code >> 8) & 0xFF;
+            }
+            return { encoding: 1, bytes }; // UTF-16 with BOM
+        }
+    }
+}
+
 function createTextFrame(id, text, majorVersion = 3) {
-    const textBytes = new TextEncoder().encode(text);
-    const frameSize = 1 + textBytes.length; // 1 byte encoding
+    const encoded = encodeText(text, majorVersion);
+    const frameSize = 1 + encoded.bytes.length; // 1 byte encoding + text bytes
     const frameData = new Uint8Array(10 + frameSize);
     
     frameData[0] = id.charCodeAt(0);
@@ -626,8 +661,8 @@ function createTextFrame(id, text, majorVersion = 3) {
     
     frameData[8] = 0;
     frameData[9] = 0;
-    frameData[10] = 3; // UTF-8 encoding
-    frameData.set(textBytes, 11);
+    frameData[10] = encoded.encoding;
+    frameData.set(encoded.bytes, 11);
     
     return frameData;
 }
