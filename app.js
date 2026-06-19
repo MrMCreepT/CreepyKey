@@ -301,14 +301,47 @@ async function processBatchFile(fileHandle, outDirHandle) {
         let savedFile = null;
 
         if (fileExists) {
-            // If output file already exists, read the existing one directly to avoid rewriting
+            // If the output file already exists, do a quick check to see if it needs tag updates
             const existingFile = await existingFileHandle.getFile();
-            savedFile = existingFile;
+            const existingBuffer = await existingFile.arrayBuffer();
+            const existingTags = parseID3TagsFromBuffer(existingBuffer);
+
+            let needsUpdate = false;
+            if (optTitle.checked) {
+                const prefix = `${chosenKey} - `;
+                if (!existingTags.title || !existingTags.title.startsWith(prefix)) {
+                    needsUpdate = true;
+                }
+            }
+            if (optTags.checked) {
+                if (!existingTags.key) {
+                    needsUpdate = true;
+                }
+            }
+
+            if (!needsUpdate) {
+                // Already has all requested updates, reuse the existing file directly
+                savedFile = existingFile;
+            } else {
+                // Output file is out of sync with selected tag options; update and rewrite it
+                outputBuffer = updateID3Tags(arrayBuffer, result.camelotCode, result.bpm, {
+                    prependTitle: optTitle.checked,
+                    titleKeyPrefix: chosenKey,
+                    writeTags: optTags.checked
+                }, file.name);
+
+                savedFile = new File([outputBuffer], savedFilename, { type: file.type });
+                const writable = await existingFileHandle.createWritable();
+                await writable.write(outputBuffer);
+                await writable.close();
+                fileExists = false; // Mark false so UI status correctly shows 'Saved' rather than 'Skipped'
+            }
         } else {
             // Perform custom binary ID3v2 tag updates if options are selected
             if (optTitle.checked || optTags.checked) {
                 outputBuffer = updateID3Tags(arrayBuffer, result.camelotCode, result.bpm, {
                     prependTitle: optTitle.checked,
+                    titleKeyPrefix: chosenKey,
                     writeTags: optTags.checked
                 }, file.name);
             }
@@ -611,7 +644,7 @@ function updateID3Tags(arrayBuffer, camelotCode, bpm, options, fallbackFilename)
             if (options.prependTitle) {
                 const originalTitle = decodeTextFrame(uint8, offset, frameSize);
                 // Prepend Key if not already prepended
-                const prefix = `${camelotCode} - `;
+                const prefix = `${options.titleKeyPrefix || camelotCode} - `;
                 let newTitle = originalTitle;
                 if (!originalTitle.startsWith(prefix)) {
                     newTitle = prefix + originalTitle;
@@ -639,7 +672,7 @@ function updateID3Tags(arrayBuffer, camelotCode, bpm, options, fallbackFilename)
     // Add new TIT2 if not found and prependTitle is requested
     if (options.prependTitle && !foundTitle) {
         const cleanName = fallbackFilename.replace(/\.[^/.]+$/, "");
-        newFrames.push(createTextFrame('TIT2', `${camelotCode} - ${cleanName}`, majorVersion));
+        newFrames.push(createTextFrame('TIT2', `${options.titleKeyPrefix || camelotCode} - ${cleanName}`, majorVersion));
     }
     
     let framesSizeSum = 0;
@@ -694,7 +727,7 @@ function createMinimalID3Tag(arrayBuffer, camelotCode, bpm, options, fallbackFil
     const newFrames = [];
     if (options.prependTitle) {
         const cleanName = fallbackFilename.replace(/\.[^/.]+$/, "");
-        newFrames.push(createTextFrame('TIT2', `${camelotCode} - ${cleanName}`, 3));
+        newFrames.push(createTextFrame('TIT2', `${options.titleKeyPrefix || camelotCode} - ${cleanName}`, 3));
     }
     if (options.writeTags) {
         if (camelotCode && camelotCode !== 'Unknown') {

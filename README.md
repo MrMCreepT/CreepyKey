@@ -10,7 +10,7 @@ Because it runs 100% client-side, your files never leave your computer—guarant
 
 *   📂 **Recursive Directory Processing**: Deep-scans selected folders using the *File System Access API*, bypassing the output folder to prevent loops.
 *   ⚡ **Dual-Layer Skip Optimization**:
-    *   **Destination Check**: Instantly skips processing if the target file already exists in the `Processed_Tracks` directory.
+    *   **Destination Check**: Instantly skips processing if the target file already exists in the `Processed_Tracks` directory and matches the selected tagging options. If the tag options have changed (or a different notation is selected), it performs a fast tag-only write without decoding the audio.
     *   **Metadata Tag Bypass**: Scans the source file's ID3v2 headers for existing `TKEY` (Key) and `TBPM` (BPM) tags. If found, it bypasses the slow audio decoding and worker analysis steps entirely, resolving and copying the file in under 1 millisecond.
 *   🧠 **Off-Main-Thread DSP**: Mathematical calculations (peak-detection for BPM and selective DFT chromagram correlation for Key) run inside a background Web Worker to keep the UI smooth and responsive.
 *   🛡️ **In-Place Binary ID3 Preservation**: Modifies MP3 buffers directly to inject compatible Camelot Key (`TKEY`) and BPM (`TBPM`) tags. Unlike typical libraries, it **preserves 100% of your existing tags** (Artwork, Title, Artist, Album, Ratings, and DJ cue points/beatgrids from Rekordbox, Serato, or Traktor).
