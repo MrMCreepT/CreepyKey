@@ -1,6 +1,6 @@
 {
-  "name": "CreepyKey Analyser",
-  "short_name": "CreepyKey",
+  "name": "CreepyCrate & Key DJ",
+  "short_name": "CreepyCrate&Key_DJ",
   "description": "A free, in-browser harmonic mixing and BPM detection tool.",
   "start_url": "/index.html",
   "display": "standalone",

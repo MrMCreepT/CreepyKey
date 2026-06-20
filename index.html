@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CreepyKey & Tempo Analyser</title>
+    <title>CreepyCrate & Key DJ</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0d0d12">
     <script src="https://cdn.jsdelivr.net/npm/browser-id3-writer@4.4.0/dist/browser-id3-writer.min.js"></script>
@@ -234,10 +234,28 @@
             background-color: rgba(85, 217, 141, 0.06);
         }
 
-        .track-name { font-weight: 500; }
-        .new-name { color: var(--text-muted); }
+        .track-name {
+            font-weight: 500;
+            max-width: 260px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .new-name {
+            color: var(--text-muted);
+            max-width: 260px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .bpm-value { font-family: monospace; font-size: 1.1rem; }
-        .genre-value { color: var(--text-muted); }
+        .genre-value {
+            color: var(--text-muted);
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         
         .badge {
             display: inline-block;
@@ -330,76 +348,810 @@
         }
 
         #waveform-container { flex-grow: 1; height: 60px; }
+
+        /* Main Layout Grid */
+        .main-layout {
+            display: flex;
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            flex: 1 1 700px;
+            width: 100%;
+            min-width: 0; /* Prevent flex overflow */
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .wheel-container-wrapper {
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--surface-colour);
+            border: 1px solid var(--border-colour);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-sizing: border-box;
+            align-self: flex-start;
+        }
+
+        /* Sortable Columns */
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        th.sortable:hover {
+            background-color: var(--surface-hover);
+            color: var(--text-main);
+        }
+
+        th.sortable .sort-icon {
+            font-size: 0.75rem;
+            color: var(--accent-colour);
+        }
+
+        th.active-sort {
+            color: var(--text-main);
+            background-color: rgba(0, 229, 255, 0.04);
+            border-bottom: 2px solid var(--accent-colour);
+        }
+
+        /* Energy Column and Bar */
+        .energy-bar-container {
+            display: flex;
+            gap: 2px;
+            font-size: 0.95rem;
+        }
+        
+        .wheel-segment {
+            transition: fill 0.2s ease, fill-opacity 0.2s ease, filter 0.2s ease, stroke 0.2s ease;
+        }
+        
+        .wheel-segment:hover {
+            fill-opacity: 0.8 !important;
+            filter: drop-shadow(0 0 4px rgba(255,255,255,0.2));
+            stroke: #ffffff !important;
+        }
+
+        /* View Switchers */
+        .view-switch-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            width: 100%;
+            max-width: 1100px;
+            justify-content: flex-start;
+        }
+
+        .tab-btn {
+            background-color: var(--surface-colour);
+            color: var(--text-muted);
+            border: 1px solid var(--border-colour);
+            padding: 0.8rem 1.6rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background-color: var(--surface-hover);
+        }
+
+        .tab-btn.active {
+            background-color: var(--accent-colour);
+            color: #000;
+            border-color: var(--accent-colour);
+            box-shadow: 0 4px 12px rgba(0, 229, 255, 0.15);
+        }
+
+        .view-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Setlist Layout */
+        .setlist-layout {
+            display: flex;
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            box-sizing: border-box;
+        }
+
+        .setlist-sidebar {
+            flex: 0 0 280px;
+            background-color: var(--surface-colour);
+            border: 1px solid var(--border-colour);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-sizing: border-box;
+            max-height: 700px;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .setlist-workspace {
+            flex: 1 1 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            min-width: 0;
+        }
+
+        .panel-title {
+            margin-top: 0;
+            margin-bottom: 1.2rem;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-colour);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Setlist Library Items */
+        .setlist-lib-item {
+            background-color: rgba(0, 0, 0, 0.15);
+            border: 1px solid var(--border-colour);
+            border-radius: 6px;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .setlist-lib-item:hover {
+            border-color: var(--text-muted);
+            background-color: var(--surface-hover);
+        }
+
+        .setlist-lib-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .setlist-lib-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Setlist Timeline */
+        .timeline-container-wrapper {
+            background-color: var(--surface-colour);
+            border: 1px solid var(--border-colour);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .setlist-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 120px;
+            background-color: rgba(0,0,0,0.15);
+            border: 2px dashed var(--border-colour);
+            border-radius: 8px;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .setlist-timeline.drag-over {
+            border-color: var(--accent-colour);
+            background-color: rgba(0, 229, 255, 0.02);
+        }
+
+        .timeline-card {
+            background-color: var(--surface-colour);
+            border: 1px solid var(--border-colour);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            cursor: grab;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            position: relative;
+        }
+
+        .timeline-card:active {
+            cursor: grabbing;
+        }
+
+        .timeline-card-drag-handle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            user-select: none;
+            padding-right: 5px;
+        }
+
+        .timeline-card-details {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .timeline-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .timeline-card-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .timeline-card-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .action-icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .action-icon-btn:hover {
+            color: var(--text-main);
+            background-color: var(--surface-hover);
+        }
+
+        .action-icon-btn.delete-btn:hover {
+            color: #EB5757;
+            background-color: rgba(235, 87, 87, 0.08);
+        }
+
+        /* Transition Indicators */
+        .transition-flow-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            align-self: center;
+            margin: 4px 0;
+            letter-spacing: 0.5px;
+            gap: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .transition-flow-indicator.perfect {
+            background-color: rgba(85, 217, 141, 0.1);
+            color: var(--match-colour);
+            border: 1px solid rgba(85, 217, 141, 0.3);
+        }
+
+        .transition-flow-indicator.compatible {
+            background-color: rgba(255, 179, 0, 0.1);
+            color: #ffb300;
+            border: 1px solid rgba(255, 179, 0, 0.3);
+        }
+
+        .transition-flow-indicator.clash {
+            background-color: rgba(235, 87, 87, 0.1);
+            color: #EB5757;
+            border: 1px solid rgba(235, 87, 87, 0.3);
+        }
+
+        /* DJ Mixer Panel */
+        .dj-mixer-panel {
+            background-color: var(--surface-colour);
+            border: 1px solid var(--border-colour);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .decks-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .deck-player {
+            flex: 1 1 300px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-colour);
+            border-radius: 8px;
+            padding: 1.2rem;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .deck-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        .deck-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: var(--text-muted);
+            color: #000;
+        }
+
+        #deck-a .deck-badge {
+            background-color: var(--accent-colour);
+        }
+
+        #deck-b .deck-badge {
+            background-color: #e3e553;
+        }
+
+        .deck-track-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+        }
+
+        .deck-waveform {
+            height: 60px;
+            background-color: rgba(0,0,0,0.3);
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .deck-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .deck-btn {
+            background-color: var(--surface-colour);
+            color: var(--text-main);
+            border: 1px solid var(--border-colour);
+            border-radius: 6px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .deck-btn:hover {
+            background-color: var(--surface-hover);
+        }
+
+        .deck-btn.play-btn {
+            background-color: var(--accent-colour);
+            color: #000;
+            border: none;
+        }
+
+        .deck-btn.play-btn.playing {
+            background-color: #ff3d00;
+            color: #fff;
+        }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .slider-container label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 600;
+        }
+
+        .slider-container input[type="range"] {
+            accent-color: var(--accent-colour);
+            background: var(--border-colour);
+            height: 4px;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .mixer-center-controls {
+            border-top: 1px solid var(--border-colour);
+            padding-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .crossfader-container input[type="range"] {
+            height: 6px;
+            accent-color: var(--text-main);
+        }
+
+        .automix-btn {
+            background: linear-gradient(135deg, #00e5ff 0%, #c758e8 100%);
+            color: #000;
+            font-weight: 800;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .automix-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(199, 88, 232, 0.3);
+        }
+
+        .beatgrid-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: rgba(255, 255, 255, 0.22);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        /* Stacked layout rules */
+        .decks-container.layout-stacked {
+            flex-direction: column;
+            gap: 15px;
+        }
+        .decks-container.layout-stacked .deck-player {
+            flex: 1 1 100%;
+        }
+        .decks-container.layout-stacked .deck-waveform {
+            height: 70px;
+        }
+
+        .loop-size-btn.active {
+            background-color: var(--accent-colour) !important;
+            color: #000 !important;
+            border-color: var(--accent-colour) !important;
+        }
+
+        .loop-toggle-btn.active {
+            background-color: #ff3d00 !important;
+            color: #fff !important;
+            border-color: #ff3d00 !important;
+        }
+
+        .metronome-btn.active {
+            background-color: #ffb300 !important;
+            color: #000 !important;
+            border-color: #ffb300 !important;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Creepy<span>Key</span></h1>
+        <h1>Creepy<span>Crate & Key DJ</span></h1>
         <p class="subtitle">Studio-grade batch processor with real-time audio playback.</p>
     </header>
 
-    <div class="toolbar">
-        <button id="folder-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-            Select Folder to Process
-        </button>
-        <div class="select-container">
-            <label for="notation-select">Key Notation</label>
-            <select id="notation-select">
-                <option value="camelot" selected>Camelot Wheel (8A)</option>
-                <option value="standard">Standard Keys (A Minor)</option>
-            </select>
+    <div class="view-switch-container">
+        <button id="btn-view-crate" class="tab-btn active">Crate Library</button>
+        <button id="btn-view-setlist" class="tab-btn">Setlist Builder & DJ Mixer</button>
+    </div>
+
+    <!-- Crate View Panel -->
+    <div id="crate-view" class="view-panel">
+        <div class="toolbar">
+            <button id="folder-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                Select Folder to Process
+            </button>
+            <div class="select-container">
+                <label for="notation-select">Key Notation</label>
+                <select id="notation-select">
+                    <option value="camelot" selected>Camelot Wheel (8A)</option>
+                    <option value="standard">Standard Keys (A Minor)</option>
+                </select>
+            </div>
+            <button id="export-m3u8-btn" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Export M3U8 Playlist
+            </button>
+            <button id="export-csv-btn" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Export CSV Setlist
+            </button>
         </div>
-        <button id="export-m3u8-btn" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Export M3U8 Playlist
-        </button>
-        <button id="export-csv-btn" disabled>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            Export CSV Setlist
-        </button>
+
+        <div class="options-container">
+            <label class="checkbox-label">
+                <input type="checkbox" id="opt-filename" checked>
+                Rename Filename (Key - Energy - Name)
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="opt-title" checked>
+                Prepend Key & Energy to Track Title Tag
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="opt-tags">
+                Write Key & BPM Tags to ID3
+            </label>
+        </div>
+
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+        </div>
+        <div id="progress-text">Analysing 0 of 0 files...</div>
+
+        <div class="instruction-tip">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Click any analysed track to preview audio and highlight harmonic matches.
+        </div>
+
+        <div class="main-layout">
+            <div class="table-container">
+                <table id="tracks-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" data-col="originalName">Original Name <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="newName">New Filename <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="bpm">BPM <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="key">Key <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="energy">Energy <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="genre">Genre <span class="sort-icon"></span></th>
+                            <th class="sortable" data-col="status">Status <span class="sort-icon"></span></th>
+                            <th>Setlist</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-body">
+                    </tbody>
+                </table>
+            </div>
+            <div class="wheel-container-wrapper">
+                <h3 style="margin-top: 0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); text-align: center; font-weight: 700;">Harmonic Key Wheel</h3>
+                <div id="camelot-wheel-container" style="width: 270px; height: 270px; display: flex; align-items: center; justify-content: center;"></div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1rem; text-align: center; line-height: 1.45; font-weight: 500;">
+                    Click segments to toggle filter. Glowing neighbors represent harmonic matches.
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="options-container">
-        <label class="checkbox-label">
-            <input type="checkbox" id="opt-filename" checked>
-            Rename Filename
-        </label>
-        <label class="checkbox-label">
-            <input type="checkbox" id="opt-title">
-            Prepend Key to Track Title Tag
-        </label>
-        <label class="checkbox-label">
-            <input type="checkbox" id="opt-tags">
-            Write Key & BPM Tags to ID3
-        </label>
+    <!-- Setlist Builder Panel -->
+    <div id="setlist-view" class="view-panel" style="display: none; width: 100%;">
+        <div class="setlist-layout">
+            <!-- Library Sidebar -->
+            <div class="setlist-sidebar">
+                <h3 class="panel-title">Library Tracks</h3>
+                
+                <!-- Sidebar Search/Filter Panel -->
+                <div class="sidebar-filters" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.2rem; background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px; border: 1px solid var(--border-colour);">
+                    <input type="text" id="sidebar-search" placeholder="Search track name..." style="background-color: var(--surface-colour); border: 1px solid var(--border-colour); border-radius: 6px; padding: 6px 10px; color: var(--text-main); font-size: 0.85rem; outline: none; width: 100%; box-sizing: border-box;">
+                    
+                    <select id="sidebar-genre-filter" style="background-color: var(--surface-colour); border: 1px solid var(--border-colour); border-radius: 6px; padding: 6px; color: var(--text-main); font-size: 0.85rem; cursor: pointer; outline: none; width: 100%; box-sizing: border-box;">
+                        <option value="all">All Genres</option>
+                    </select>
+                    
+                    <label class="checkbox-label" style="font-size: 0.8rem; font-weight: bold; margin-top: 2px;">
+                        <input type="checkbox" id="sidebar-compat-filter" style="width: 14px; height: 14px;">
+                        Key Compatible Only
+                    </label>
+                </div>
+                
+                <div id="setlist-library-list">
+                    <div style="font-size: 0.85rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0;">
+                        No tracks analyzed yet. Click 'Crate Library' to select a folder.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline & Mixer Workspace -->
+            <div class="setlist-workspace">
+                <div class="timeline-container-wrapper">
+                    <h3 class="panel-title">Setlist Timeline</h3>
+                    <div id="setlist-timeline" class="setlist-timeline">
+                        <div style="color: var(--text-muted); text-align: center; padding: 2.2rem 0; font-size: 0.85rem; font-weight: 500;">
+                            Drag tracks from the sidebar library here or click their '+' button to build your set.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dj-mixer-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-colour); padding-bottom: 0.5rem; margin-bottom: 1.2rem;">
+                        <h3 class="panel-title" style="margin: 0; border: none; padding: 0;">Dual-Deck DJ Mixer</h3>
+                        <button id="btn-toggle-layout" class="tab-btn" style="padding: 0.4rem 1rem; font-size: 0.85rem; margin: 0; min-height: unset; height: 32px;">
+                            Layout: Side-by-Side
+                        </button>
+                    </div>
+                    <div class="decks-container">
+                        <!-- Deck A (Left Player) -->
+                        <div class="deck-player" id="deck-a">
+                            <div class="deck-header">
+                                <span class="deck-badge">DECK A</span>
+                                <span id="deck-a-title" class="deck-track-title">No Track Loaded</span>
+                                <span id="deck-a-bpm-display" style="font-family: monospace; font-weight: bold; color: var(--accent-colour); font-size: 0.85rem;">-- BPM</span>
+                            </div>
+                            <div id="waveform-a" class="deck-waveform"></div>
+                            
+                            <!-- Deck A Controls Grid -->
+                            <div class="deck-controls-grid" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                                <!-- Row 1: Play, Sync, Pitch, Vol -->
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <button class="deck-btn play-btn" id="deck-a-play" disabled style="padding: 0.5rem 1rem;">Play</button>
+                                    <button class="deck-btn sync-btn" id="deck-a-sync" disabled style="padding: 0.5rem 1rem;">Sync to B</button>
+                                    <div class="slider-container" style="flex-grow: 1; min-width: 100px;">
+                                        <label>Pitch: <span id="deck-a-pitch-label">1.00x</span></label>
+                                        <input type="range" id="deck-a-pitch" min="0.92" max="1.08" step="0.002" value="1.00" disabled style="width: 100%;">
+                                    </div>
+                                    <div class="slider-container" style="width: 60px;">
+                                        <label>Vol</label>
+                                        <input type="range" id="deck-a-vol" min="0" max="1" step="0.05" value="0.8" style="width: 100%;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Row 2: Grid Nudge, Platter Bend, Metronome -->
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Grid:</span>
+                                        <button class="deck-btn grid-nudge-btn" id="deck-a-grid-left" data-deck="a" data-dir="left" disabled style="padding: 4px 8px; font-size: 0.8rem;">◀</button>
+                                        <button class="deck-btn grid-nudge-btn" id="deck-a-grid-right" data-deck="a" data-dir="right" disabled style="padding: 4px 8px; font-size: 0.8rem;">▶</button>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Bend:</span>
+                                        <button class="deck-btn jog-bend-btn" id="deck-a-bend-left" data-deck="a" data-dir="left" disabled style="padding: 4px 8px; font-size: 0.8rem;">◀</button>
+                                        <button class="deck-btn jog-bend-btn" id="deck-a-bend-right" data-deck="a" data-dir="right" disabled style="padding: 4px 8px; font-size: 0.8rem;">▶</button>
+                                    </div>
+                                    <button class="deck-btn metronome-btn" id="deck-a-metronome" data-deck="a" disabled style="padding: 4px 8px; font-size: 0.8rem; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                                        <span>Metronome</span> <span>🔇</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Row 3: Quantized Loop controls -->
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background-color: rgba(0,0,0,0.15); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-colour);">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Loop:</span>
+                                    <div class="loop-sizes-group" style="display: flex; gap: 4px;">
+                                        <button class="deck-btn loop-size-btn active" data-deck="a" data-size="1" disabled style="padding: 3px 6px; font-size: 0.75rem;">1</button>
+                                        <button class="deck-btn loop-size-btn" data-deck="a" data-size="4" disabled style="padding: 3px 6px; font-size: 0.75rem;">4</button>
+                                        <button class="deck-btn loop-size-btn" data-deck="a" data-size="8" disabled style="padding: 3px 6px; font-size: 0.75rem;">8</button>
+                                        <button class="deck-btn loop-size-btn" data-deck="a" data-size="16" disabled style="padding: 3px 6px; font-size: 0.75rem;">16</button>
+                                    </div>
+                                    <button class="deck-btn loop-toggle-btn" id="deck-a-loop-toggle" data-deck="a" disabled style="padding: 3px 10px; font-size: 0.75rem; font-weight: bold; margin-left: auto; background-color: var(--surface-colour); border-color: var(--border-colour);">
+                                        LOOP OFF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Deck B (Right Player) -->
+                        <div class="deck-player" id="deck-b">
+                            <div class="deck-header">
+                                <span class="deck-badge">DECK B</span>
+                                <span id="deck-b-title" class="deck-track-title">No Track Loaded</span>
+                                <span id="deck-b-bpm-display" style="font-family: monospace; font-weight: bold; color: #e3e553; font-size: 0.85rem;">-- BPM</span>
+                            </div>
+                            <div id="waveform-b" class="deck-waveform"></div>
+                            
+                            <!-- Deck B Controls Grid -->
+                            <div class="deck-controls-grid" style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+                                <!-- Row 1: Play, Sync, Pitch, Vol -->
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <button class="deck-btn play-btn" id="deck-b-play" disabled style="padding: 0.5rem 1rem;">Play</button>
+                                    <button class="deck-btn sync-btn" id="deck-b-sync" disabled style="padding: 0.5rem 1rem;">Sync to A</button>
+                                    <div class="slider-container" style="flex-grow: 1; min-width: 100px;">
+                                        <label>Pitch: <span id="deck-b-pitch-label">1.00x</span></label>
+                                        <input type="range" id="deck-b-pitch" min="0.92" max="1.08" step="0.002" value="1.00" disabled style="width: 100%;">
+                                    </div>
+                                    <div class="slider-container" style="width: 60px;">
+                                        <label>Vol</label>
+                                        <input type="range" id="deck-b-vol" min="0" max="1" step="0.05" value="0.8" style="width: 100%;">
+                                    </div>
+                                </div>
+                                
+                                <!-- Row 2: Grid Nudge, Platter Bend, Metronome -->
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Grid:</span>
+                                        <button class="deck-btn grid-nudge-btn" id="deck-b-grid-left" data-deck="b" data-dir="left" disabled style="padding: 4px 8px; font-size: 0.8rem;">◀</button>
+                                        <button class="deck-btn grid-nudge-btn" id="deck-b-grid-right" data-deck="b" data-dir="right" disabled style="padding: 4px 8px; font-size: 0.8rem;">▶</button>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Bend:</span>
+                                        <button class="deck-btn jog-bend-btn" id="deck-b-bend-left" data-deck="b" data-dir="left" disabled style="padding: 4px 8px; font-size: 0.8rem;">◀</button>
+                                        <button class="deck-btn jog-bend-btn" id="deck-b-bend-right" data-deck="b" data-dir="right" disabled style="padding: 4px 8px; font-size: 0.8rem;">▶</button>
+                                    </div>
+                                    <button class="deck-btn metronome-btn" id="deck-b-metronome" data-deck="b" disabled style="padding: 4px 8px; font-size: 0.8rem; margin-left: auto; display: flex; align-items: center; gap: 4px;">
+                                        <span>Metronome</span> <span>🔇</span>
+                                    </button>
+                                </div>
+                                
+                                <!-- Row 3: Quantized Loop controls -->
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background-color: rgba(0,0,0,0.15); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-colour);">
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Loop:</span>
+                                    <div class="loop-sizes-group" style="display: flex; gap: 4px;">
+                                        <button class="deck-btn loop-size-btn active" data-deck="b" data-size="1" disabled style="padding: 3px 6px; font-size: 0.75rem;">1</button>
+                                        <button class="deck-btn loop-size-btn" data-deck="b" data-size="4" disabled style="padding: 3px 6px; font-size: 0.75rem;">4</button>
+                                        <button class="deck-btn loop-size-btn" data-deck="b" data-size="8" disabled style="padding: 3px 6px; font-size: 0.75rem;">8</button>
+                                        <button class="deck-btn loop-size-btn" data-deck="b" data-size="16" disabled style="padding: 3px 6px; font-size: 0.75rem;">16</button>
+                                    </div>
+                                    <button class="deck-btn loop-toggle-btn" id="deck-b-loop-toggle" data-deck="b" disabled style="padding: 3px 10px; font-size: 0.75rem; font-weight: bold; margin-left: auto; background-color: var(--surface-colour); border-color: var(--border-colour);">
+                                        LOOP OFF
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mixer-center-controls">
+                        <div class="slider-container crossfader-container" style="width: 100%; max-width: 380px;">
+                            <label style="margin-bottom: 0.3rem;">CROSSFADER</label>
+                            <input type="range" id="crossfader" min="-1" max="1" step="0.05" value="0" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">
+                                <span>Deck A</span>
+                                <span>Center</span>
+                                <span>Deck B</span>
+                            </div>
+                        </div>
+                        
+                        <button id="btn-automix" class="automix-btn" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            Trigger 16-Bar Auto-Mix
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div id="progress-container">
-        <div id="progress-bar"></div>
-    </div>
-    <div id="progress-text">Analysing 0 of 0 files...</div>
-
-    <div class="instruction-tip">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-        Click any analysed track to preview audio and highlight harmonic matches.
-    </div>
-
-    <table id="tracks-table">
-        <thead>
-            <tr>
-                <th>Original Name</th>
-                <th>New Filename</th>
-                <th>BPM</th>
-                <th>Key</th>
-                <th>Genre</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody id="results-body">
-            </tbody>
-    </table>
 
     <div id="player-deck">
         <button id="play-pause-btn">
